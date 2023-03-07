@@ -1,7 +1,7 @@
 import React, { FC } from 'react'
 import { Fragment, Suspense, useCallback, useEffect, useState } from 'react'
 import { Dialog, Transition } from '@headlessui/react'
-import { JobsService } from './api-services/Axios'
+import { ProductService } from './api-services/Axios'
 import DataTable from 'react-data-table-component'
 import { FaRegEdit, FaDatabase } from "react-icons/fa";
 
@@ -15,7 +15,7 @@ const Crud: FC = (): JSX.Element => {
         Description: string,
         Price: number,
         Quantity: number,
-        id?: number
+        _id?: string
 
     }
     const customStyles = {
@@ -88,7 +88,7 @@ const Crud: FC = (): JSX.Element => {
                                 Description: row.Description,
                                 Price: row.Price,
                                 Quantity: row.Quantity,
-                                id: 0
+                                _id: row._id
                             })
                             openModal2()
                         }}
@@ -101,11 +101,19 @@ const Crud: FC = (): JSX.Element => {
         },
         {
             name: <>Delete</>,
-            selector: (row: any) => <FaDatabase
-                onClick={() => {
-                    alert("Delete")
-                }}
-            />,
+            selector: (row: any) =>
+                <button
+                    onClick={() => {
+                        ProductService.ProductDelete({ _id: row._id })
+                        Fetch()
+                    }}
+                    className='bg-red-400 py-2 px-7 rounded w-5'>
+
+                    <FaDatabase
+
+                    />
+                </button>
+            ,
             sortable: true,
             wrap: true,
             grow: 1
@@ -153,20 +161,20 @@ const Crud: FC = (): JSX.Element => {
     }
 
 
+    const Fetch = async function () {
+        try {
+            const { data } = await ProductService.ProductList()
+            setJobsList(data.data)
+        } catch (err) {
+            console.log(err)
+        }
+    }
+
 
     // Fetch
 
     useEffect(() => {
-        (
-            async function () {
-                try {
-                    const { data } = await JobsService.ProductList()
-                    setJobsList(data)
-                } catch (err) {
-                    console.log(err)
-                }
-            }
-        )()
+        Fetch()
 
     }, [submit])
 
@@ -176,7 +184,7 @@ const Crud: FC = (): JSX.Element => {
     useEffect(() => {
         if (submit) {
             console.log(CreateJob)
-            JobsService.ProductCreate(CreateJob).then(() => {
+            ProductService.ProductCreate(CreateJob).then(() => {
                 setSubmit(false)
                 alert("Create Sucessfully...!")
                 closeModal()
@@ -197,18 +205,18 @@ const Crud: FC = (): JSX.Element => {
 
     useEffect(() => {
         if (Edited) {
-            // console.log(ProductEdit)
-            // JobsService.ProductCreate(ProductEdit).then(() => {
-            //     setSubmit(false)
-            //     alert("Create Sucessfully...!")
-            //     closeModal()
+            console.log(ProductEdit)
+            ProductService.ProductUpdate(ProductEdit).then(() => {
+                setSubmit(false)
+                alert("Updated Sucessfully...!")
+                closeModal()
+                Fetch()
 
-            // }).catch((err) => {
-            //     console.log(err)
-            // })
-            // setSubmit(false)
-            alert("Edited")
-            closeModal()
+            }).catch((err) => {
+                console.log(err)
+            })
+            setSubmit(false)
+            closeModal2()
         }
 
 
@@ -492,7 +500,7 @@ const Crud: FC = (): JSX.Element => {
                                                             })
 
                                                         }}
-                                                        className=' appearance-none border rounded w-full py-3 m-1 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline' type={"text"} id='Location' placeholder='ex : 100000' />
+                                                        className=' appearance-none border rounded w-full py-3 m-1 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline' type={"number"} id='Location' placeholder='ex : 100000' />
                                                 </div>
                                                 <div className=''>
                                                     <label className='block text-gray-700 text-base ' htmlFor="Remote">
@@ -508,7 +516,7 @@ const Crud: FC = (): JSX.Element => {
                                                             })
 
                                                         }}
-                                                        className=' appearance-none border rounded w-full py-3 m-1 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline' type={"text"} id='Remote' placeholder='ex : 1' />
+                                                        className=' appearance-none border rounded w-full py-3 m-1 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline' type={"number"} id='Remote' placeholder='ex : 1' />
                                                 </div>
                                             </div>
                                             {/* 2-end */}
